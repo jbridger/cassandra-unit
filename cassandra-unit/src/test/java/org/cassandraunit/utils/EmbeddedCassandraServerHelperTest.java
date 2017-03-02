@@ -3,8 +3,13 @@ package org.cassandraunit.utils;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
+import org.apache.commons.io.IOUtils;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.File;
+import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -29,6 +34,25 @@ public class EmbeddedCassandraServerHelperTest {
         testIfTheEmbeddedCassandraServerIsUpOnHost("127.0.0.1", nativePort);
     }
 
+    @Test
+    public void shouldStartupOnGivenTemporaryDirectory() throws Exception {
+        //given
+        String tmpDir = UUID.randomUUID().toString();
+
+        List<String> sourceConfig = IOUtils.readLines(
+                getClass().getResourceAsStream("/" + EmbeddedCassandraServerHelper.CASSANDRA_CONCURRENT_YML_FILE));
+
+
+        //when
+        EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.CASSANDRA_CONCURRENT_YML_FILE, tmpDir);
+
+        //then
+        File destFile = new File(tmpDir + EmbeddedCassandraServerHelper.CASSANDRA_CONCURRENT_YML_FILE);
+
+        int nativePort = EmbeddedCassandraServerHelper.getNativeTransportPort();
+        testIfTheEmbeddedCassandraServerIsUpOnHost("127.0.0.1", nativePort);
+    }
+
     private void testIfTheEmbeddedCassandraServerIsUpOnHost(String host, int port) {
         Cluster cluster = com.datastax.driver.core.Cluster.builder()
                 .addContactPoints(host)
@@ -47,4 +71,15 @@ public class EmbeddedCassandraServerHelperTest {
             cluster.close();
         }
     }
+
+    private class TestConfig {
+//        private String
+    }
+    /**
+     * hints_directory
+     * data_file_directories
+     * commitlog_directory
+     * cdc_raw_directory
+     * saved_caches_directory
+     */
 }
